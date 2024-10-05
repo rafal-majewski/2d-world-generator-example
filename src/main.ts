@@ -28,6 +28,13 @@ window.addEventListener("resize", function handleWindowResize(): void {
 });
 
 requestAnimationFrame(function animate(): void {
+	camera = {
+		...camera,
+		position: {
+			x: camera.position.x,
+			y: camera.position.y + 1,
+		},
+	};
 	paintCanvas(canvas, camera, tileFeaturesGenerator);
 	requestAnimationFrame(animate);
 });
