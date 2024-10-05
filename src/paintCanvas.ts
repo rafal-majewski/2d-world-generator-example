@@ -1,6 +1,14 @@
 import type {Camera} from "./Camera.js";
+import type {Coordinates} from "./Coordinates.js";
+import {createCoordinates} from "./createCoordinates.js";
+import type {TileFeatures} from "./TileFeatures.js";
+import type {TileFeaturesGenerator} from "./TileFeaturesGenerator.js";
 
-export function paintCanvas(canvas: HTMLCanvasElement, camera: Camera): void {
+export function paintCanvas(
+	canvas: HTMLCanvasElement,
+	camera: Camera,
+	tileFeaturesGenerator: TileFeaturesGenerator,
+): void {
 	const ctx = canvas.getContext("2d");
 
 	if (ctx !== null) {
@@ -43,7 +51,15 @@ export function paintCanvas(canvas: HTMLCanvasElement, camera: Camera): void {
 				tilePositionX <= maximalVisibleTilePositionX;
 				++tilePositionX
 			) {
-				ctx.fillStyle = "black";
+				const tilePosition: Coordinates = createCoordinates(tilePositionX, tilePositionY);
+				const tileFeatures: TileFeatures = tileFeaturesGenerator(tilePosition);
+
+				if (tileFeatures.height >= 0) {
+					ctx.fillStyle = "green";
+				} else {
+					ctx.fillStyle = "blue";
+				}
+
 				ctx.fillRect(tilePositionX - 0.5, tilePositionY - 0.5, 1, 1);
 			}
 		}
