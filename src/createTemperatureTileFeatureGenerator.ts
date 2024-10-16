@@ -1,5 +1,5 @@
 import type {Coordinates} from "./Coordinates.js";
-import type {HeightTileFeatureGenerator} from "./HeightTileFeatureGenerator.js";
+import type {TemperatureTileFeatureGenerator} from "./TemperatureTileFeatureGenerator.js";
 
 type Coefficient = Readonly<{
 	shiftX: number;
@@ -9,26 +9,14 @@ type Coefficient = Readonly<{
 	angle: number;
 }>;
 
-const baseHeightCoefficients: readonly Coefficient[] = Array(100)
+const temperatureCoefficients: readonly Coefficient[] = Array(100)
 	.fill(null)
 	.map(
 		(_: null, index: number): Coefficient => ({
 			shiftX: Math.random(),
 			shiftY: Math.random(),
-			amplitude: 4 * 1.05 ** -index,
-			frequency: 0.004 * 1.07 ** index,
-			angle: Math.random() * Math.PI * 2,
-		}),
-	);
-
-const hillnessCoefficients: readonly Coefficient[] = Array(30)
-	.fill(null)
-	.map(
-		(_: null, index: number): Coefficient => ({
-			shiftX: Math.random(),
-			shiftY: Math.random(),
-			amplitude: 2 * 1.05 ** -index,
-			frequency: 0.004 * 1.05 ** index,
+			amplitude: 8 * 1.05 ** -index,
+			frequency: 0.002 * 1.05 ** index,
 			angle: Math.random() * Math.PI * 2,
 		}),
 	);
@@ -49,20 +37,13 @@ function evaluateCoefficients(coefficients: readonly Coefficient[], position: Co
 	}, 0);
 }
 
-function computeHeight(position: Coordinates): number {
-	const baseHeight = evaluateCoefficients(baseHeightCoefficients, position) + 7;
-	const hillness = evaluateCoefficients(hillnessCoefficients, position);
-
-	if (hillness > 3) {
-		return baseHeight * (hillness - 3 + 1);
-	}
-
-	return baseHeight;
+function computeTemperature(position: Coordinates): number {
+	return evaluateCoefficients(temperatureCoefficients, position) + 15;
 }
 
-export function createHeightTileFeatureGenerator(): HeightTileFeatureGenerator {
+export function createTemperatureTileFeatureGenerator(): TemperatureTileFeatureGenerator {
 	const cache = new Map<Coordinates["x"], Map<Coordinates["y"], number>>();
-	return function heightTileFeatureGenerator(tilePosition: Coordinates): number {
+	return function temperatureTileFeatureGenerator(tilePosition: Coordinates): number {
 		const cachedRow = cache.get(tilePosition.x);
 
 		if (typeof cachedRow !== "undefined") {
@@ -72,15 +53,15 @@ export function createHeightTileFeatureGenerator(): HeightTileFeatureGenerator {
 				return cachedValue;
 			}
 
-			const height = computeHeight(tilePosition);
-			cachedRow.set(tilePosition.y, height);
-			return height;
+			const temperature = computeTemperature(tilePosition);
+			cachedRow.set(tilePosition.y, temperature);
+			return temperature;
 		}
 
-		const height = computeHeight(tilePosition);
+		const temperature = computeTemperature(tilePosition);
 		const newRow = new Map<Coordinates["y"], number>();
-		newRow.set(tilePosition.y, height);
+		newRow.set(tilePosition.y, temperature);
 		cache.set(tilePosition.x, newRow);
-		return height;
+		return temperature;
 	};
 }

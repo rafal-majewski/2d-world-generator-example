@@ -46,16 +46,37 @@ const sandColor: RgbColor = {
 	blue: 0,
 };
 
-const shallowWaterColor: RgbColor = {
+const frozenWaterColor: RgbColor = {
+	red: 204,
+	green: 204,
+	blue: 255,
+};
+
+const whiteColor: RgbColor = {
+	red: 255,
+	green: 255,
+	blue: 255,
+};
+
+const blackColor: RgbColor = {
+	red: 0,
+	green: 0,
+	blue: 0,
+};
+
+const waterColor: RgbColor = {
 	red: 0,
 	green: 0,
 	blue: 255,
 };
 
-const deepWaterColor: RgbColor = {
-	red: 0,
-	green: 0,
-	blue: 128,
+const tileTileToColorMap: Readonly<Record<TileFeatures["type"], RgbColor>> = {
+	snow: snowColor,
+	mountain: mountainColor,
+	grass: grassColor,
+	sand: sandColor,
+	water: waterColor,
+	frozenWater: frozenWaterColor,
 };
 
 export function paintCanvas(
@@ -106,59 +127,36 @@ export function paintCanvas(
 				++tilePositionX
 			) {
 				const tilePosition: Coordinates = createCoordinates(tilePositionX, tilePositionY);
+				const tileAbovePosition: Coordinates = createCoordinates(tilePositionX, tilePositionY - 1);
 				const tileFeatures: TileFeatures = tileFeaturesGenerator(tilePosition);
+				const tileAboveFeatures: TileFeatures = tileFeaturesGenerator(tileAbovePosition);
+				const originalTileColor = tileTileToColorMap[tileFeatures.type];
+				// add lightness if water is shallow
 
-				if (tileFeatures.height >= 100) {
-					ctx.fillStyle = stringifyRgbColor(snowColor);
-				} else if (tileFeatures.height >= 50) {
-					const interpolatedRgbColor = interpolateBetweenRgbColors(
-						mountainColor,
-						snowColor,
-						(tileFeatures.height - 50) / 50,
-					);
+				const tileColor =
+					tileFeatures.type === "water"
+						? interpolateBetweenRgbColors(
+								originalTileColor,
+								whiteColor,
+								Math.max(0, tileFeatures.height * 0.02 + 0.2),
+							)
+						: originalTileColor;
 
-					ctx.fillStyle = stringifyRgbColor(interpolatedRgbColor);
-				} else if (tileFeatures.height >= 3) {
-					const interpolatedRgbColor = interpolateBetweenRgbColors(
-						grassColor,
-						mountainColor,
-						(tileFeatures.height - 3) / (50 - 3),
-					);
-
-					ctx.fillStyle = stringifyRgbColor(interpolatedRgbColor);
-				} else if (tileFeatures.height >= 0) {
-					const interpolatedRgbColor = interpolateBetweenRgbColors(
-						sandColor,
-						grassColor,
-						tileFeatures.height / 3,
-					);
-
-					ctx.fillStyle = stringifyRgbColor(interpolatedRgbColor);
-				} else if (tileFeatures.height >= -10) {
-					const interpolatedRgbColor = interpolateBetweenRgbColors(
-						deepWaterColor,
-						shallowWaterColor,
-						(tileFeatures.height + 10) / 10,
-					);
-
-					ctx.fillStyle = stringifyRgbColor(interpolatedRgbColor);
+				if (tileAboveFeatures.type !== "water" && tileAboveFeatures.type !== "frozenWater") {
+					if (tileAboveFeatures.height > tileFeatures.height) {
+						const weight = Math.min(1, (tileAboveFeatures.height - tileFeatures.height) / 10);
+						const finalColor = interpolateBetweenRgbColors(tileColor, blackColor, weight);
+						ctx.fillStyle = stringifyRgbColor(finalColor);
+					} else if (tileAboveFeatures.height < tileFeatures.height) {
+						const weight = Math.min(1, (tileFeatures.height - tileAboveFeatures.height) / 10);
+						const finalColor = interpolateBetweenRgbColors(tileColor, whiteColor, weight);
+						ctx.fillStyle = stringifyRgbColor(finalColor);
+					} else {
+						ctx.fillStyle = stringifyRgbColor(tileColor);
+					}
 				} else {
-					ctx.fillStyle = stringifyRgbColor(deepWaterColor);
+					ctx.fillStyle = stringifyRgbColor(tileColor);
 				}
-
-				// if (tileFeatures.height >= 3) {
-				// 	ctx.fillStyle = "white";
-				// } else if (tileFeatures.height <= 0) {
-				// 	ctx.fillStyle = "black";
-				// } else {
-				// 	const interpolatedRgbColor = interpolateBetweenRgbColors(
-				// 		{red: 0, green: 0, blue: 0},
-				// 		{red: 255, green: 255, blue: 255},
-				// 		tileFeatures.height / 3,
-				// 	);
-
-				// 	ctx.fillStyle = stringifyRgbColor(interpolatedRgbColor);
-				// }
 
 				ctx.fillRect(tilePositionX - 0.5, tilePositionY - 0.5, 1, 1);
 			}

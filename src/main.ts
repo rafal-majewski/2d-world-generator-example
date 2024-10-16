@@ -5,6 +5,7 @@ import {createCamera} from "./createCamera.js";
 import {resizeCanvasToItsContainer} from "./resizeCanvasToItsContainer.js";
 import {createTileFeaturesGenerator} from "./createTileFeaturesGenerator.js";
 import {createHeightTileFeatureGenerator} from "./createHeightTileFeatureGenerator.js";
+import {createTemperatureTileFeatureGenerator} from "./createTemperatureTileFeatureGenerator.js";
 
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 resizeCanvasToItsContainer(canvas);
@@ -17,8 +18,14 @@ let camera: Camera = createCamera(
 	canvas,
 );
 
-const heightTileFeaturesGenerator = createHeightTileFeatureGenerator();
-const tileFeaturesGenerator = createTileFeaturesGenerator(heightTileFeaturesGenerator);
+const heightTileFeatureGenerator = createHeightTileFeatureGenerator();
+const temperatureTileFeatureGenerator = createTemperatureTileFeatureGenerator();
+
+const tileFeaturesGenerator = createTileFeaturesGenerator(
+	heightTileFeatureGenerator,
+	temperatureTileFeatureGenerator,
+);
+
 paintCanvas(canvas, camera, tileFeaturesGenerator);
 
 window.addEventListener("resize", function handleWindowResize(): void {
